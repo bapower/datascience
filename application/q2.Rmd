@@ -1,0 +1,39 @@
+---
+title: "q2"
+output: html_document
+---
+
+What is the yearly growth rate of Land Values over the years covered by this data? Take a simplistic model: the value is given by P=P0ertP=P0ert, where tt is measured in years. (A more complete model would give each property its own base price P(i)0P0(i).) Estimate rrover all assessments with a non-zero land value. (Hint: Consider using linear regression and logarithms.)
+
+```{r}
+data <- read.csv("Historic_Secured_Property_Tax_Rolls.csv")
+
+library(broom)
+
+valueyears <- data[,c("block_and_lot_number", "closed_roll_assessed_land_value", "closed_roll_fiscal_year")] %>% filter(closed_roll_assessed_land_value != 0) %>% group_by(block_and_lot_number, closed_roll_fiscal_year) %>% summarize("land_value" = closed_roll_assessed_land_value)  %>% ungroup %>% 
+  spread(closed_roll_fiscal_year, land_value) 
+
+fit <- valueyears %>% do(augment(lm(`2007`~`2008` | `2014`, data=.), data=.))
+
+select(fit, .fitted) %>% arrange() %>% tbl_df
+```
+
+We can use the property locations to estimate the areas of the neighborhoods. Represent each as an ellipse with semi-axes given by a single standard deviation of the longitude and latitude. What is the area, in square kilometers, of the largest neighborhood measured in this manner? Be sure to filter out invalid coordinates.
+
+```{r, echo=FALSE}
+library(stringr)
+library(tidyr)
+
+datawarea <- filter(data, Location != "") %>% separate(Location, into = c("lat", "long"), sep = ",")
+  
+datawarea$lat <- str_replace(datawarea$lat, "\\(", '')
+datawarea$long <- str_replace(datawarea$long, "\\)", '')
+
+neighborhood_areas <- group_by(datawarea, Neighborhood.Code) %>% summarize(sd_lat = sd(lat)*110.57, sd_long = sd(long)*111.32 )
+
+neighborhood_areas <- mutate(neighborhood_areas, axes = sqrt(sd_lat*sd_lat + sd_long*sd_long)) %>% mutate(area = (axes*axes*pi))
+
+largest <- sort(neighborhood_areas$area, decreasing = TRUE)[2]
+7.689157 
+```
+

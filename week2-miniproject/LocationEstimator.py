@@ -20,5 +20,5 @@ class LocationEstimator(object):
 	def predict(self, X):
 		return self.neighbors.predict([X])
 
-	def score (self, X, y):
-		return self.neighbors.score(X,y)
+	def score (self):
+		return self.neighbors.score(self.X,self.y)

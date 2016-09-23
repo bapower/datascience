@@ -12,7 +12,7 @@ class CategoryEstimator(object):
 		self.data = df.groupby(['categories']).mean().reset_index()
 		self.data = self.data[['categories','stars']]
 		self.dict = self.data.to_dict().values()
-		vector = self.vectorizer.fit_transform(self.dict)
+		self.vector = self.vectorizer.fit_transform(self.dict)
 
 		self.X = self.vector[0]
 		self.y = self.vector[1]
@@ -20,12 +20,12 @@ class CategoryEstimator(object):
 		return self.vector
 
 	def fit(self, df):
-		self.vector = dictVectorize(df)
+		self.vector = self.dictVectorize(df)
 		self.clf.fit(self.X.reshape(len(self.X), 1), self.y)
 		return self
 
 	def predict(self, X):
 		return self.clf.predict([X])
 
-	def score (self, X, y):
+	def score (self):
 		return self.clf.score(self.X.reshape(len(self.X), 1), self.y)
